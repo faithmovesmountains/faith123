@@ -30,6 +30,11 @@ const details: Record<string, { image: string; distance: string; options: string
   "Eighteen Chefs": { image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=900&q=85", distance: "0.1 km · 2 min from Bugis MRT", options: ["Cheese Baked Rice", "Chicken Steak", "Creamy Mushroom Pasta"] }
 };
 
+const filterTags: Record<string, string[]> = {
+  "Botak Cantonese Porridge": ["Rice", "Soup", "Open now", "Mall pickup"], "Sanook Kitchen": ["Rice", "Noodles", "Open now", "Direct MRT access", "Mall pickup"], "Mamma Mia Trattoria": ["Pizza", "Pasta", "Closing soon", "Direct MRT access", "Mall pickup"], "Sukiya": ["Rice", "Noodles", "Open now", "Direct MRT access", "Mall pickup"],
+  "Tangled Fresh Pasta To Go": ["Pasta", "Open now", "Direct MRT access", "Mall pickup"], "Daily Chicken": ["Fried chicken", "Snacks", "Open now", "Direct MRT access", "Mall pickup"], "Sushi Zushi": ["Rice", "Snacks", "Open now", "Direct MRT access", "Mall pickup"], "Eighteen Chefs": ["Rice", "Pasta", "Open now", "Direct MRT access", "Mall pickup"]
+};
+
 function Icon({ name, size = 20 }: { name: "pin" | "heart" | "clock" | "users" | "chevron" | "sliders" | "home" | "bookmark" | "family"; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
     pin: <><path d="M12 21s7-5.1 7-12a7 7 0 1 0-14 0c0 6.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></>,
@@ -46,8 +51,8 @@ export default function Home() {
   const [area, setArea] = useState<"Punggol" | "Bugis">("Punggol");
   const [filter, setFilter] = useState("All");
   const [saved, setSaved] = useState<string[]>([]);
-  const filters = ["All", "Under 20 min", "Hawker / food court", "Restaurant", "Quiet / moderate", "Halal"];
-  const shown = useMemo(() => places.filter((p) => p.area === area && (filter === "All" || (filter === "Under 20 min" && p.total.startsWith("1")) || (filter === "Hawker / food court" && p.venue === filter) || (filter === "Restaurant" && p.venue === filter) || (filter === "Quiet / moderate" && ["Quiet", "Moderate"].includes(p.crowd)) || (filter === "Halal" && p.tags.includes("Halal")))), [area, filter]);
+  const filters = ["All", "Under 20 min", "Rice", "Noodles", "Soup", "Fried chicken", "Pizza", "Pasta", "Snacks", "Dessert", "Open now", "Closing soon", "Direct MRT access", "Mall pickup", "Parking nearby", "Hawker / food court", "Restaurant", "Quiet / moderate"];
+  const shown = useMemo(() => places.filter((p) => p.area === area && (filter === "All" || (filter === "Under 20 min" && p.total.startsWith("1")) || (filter === "Hawker / food court" && p.venue === filter) || (filter === "Restaurant" && p.venue === filter) || (filter === "Quiet / moderate" && ["Quiet", "Moderate"].includes(p.crowd)) || filterTags[p.name].includes(filter))), [area, filter]);
   const best = shown[0] ?? places.find((p) => p.area === area)!;
   return <main>
     <header className="topbar"><a className="brand" href="#top" aria-label="Dinner Near Us home"><span className="brand-mark">D</span><span>Dinner <i>near us</i></span></a><button className="saved-action" aria-label="Saved places"><Icon name="heart" size={18}/><span>{saved.length || "Saved"}</span></button></header>
