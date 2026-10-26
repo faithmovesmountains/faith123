@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./styles.css";
 import "./enhancements.css";
+import "./decision-tools.css";
 
 export const metadata: Metadata = {
   title: "Dinner Near Us",
