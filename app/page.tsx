@@ -72,12 +72,38 @@ export default function Home() {
   const [noSpice, setNoSpice] = useState(true);
   const [needBy, setNeedBy] = useState("Any time");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [locationLabel, setLocationLabel] = useState("Singapore");
+  const [locationStatus, setLocationStatus] = useState("");
   const filters = ["All", "Under 20 min", "No queue / short queue", "Long queue / peak rush", "Rice", "Noodles", "Soup", "Fried chicken", "Pizza", "Pasta", "Snacks", "Dessert", "Open now", "Closing soon", "Direct MRT access", "Mall pickup", "Parking nearby", "Hawker / food court", "Restaurant"];
   const shown = useMemo(() => places.filter((p) => p.area === area && (filter === "All" || (filter === "Under 20 min" && p.total.startsWith("1")) || (filter === "Hawker / food court" && p.venue === filter) || (filter === "Restaurant" && p.venue === filter) || (filter === "No queue / short queue" && ["Quiet", "Moderate"].includes(p.crowd)) || (filter === "Long queue / peak rush" && ["Busy", "Peak"].includes(p.crowd)) || filterTags[p.name].includes(filter)) && (!dishSearch || `${p.name} ${details[p.name].options.join(" ")}`.toLowerCase().includes(dishSearch.toLowerCase())) && (needBy === "Any time" || (needBy === "Within 30 min" && p.total.startsWith("1")) || (needBy === "Within 45 min" && !p.total.startsWith("3")))), [area, filter, dishSearch, needBy]);
   const best = shown[0] ?? places.find((p) => p.area === area)!;
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus("Location is not supported by this browser.");
+      return;
+    }
+    setLocationStatus("Finding your location…");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const supportedAreas = { Punggol: [1.4053, 103.9023], Bugis: [1.3007, 103.8558] } as const;
+        const nearest = (Object.keys(supportedAreas) as Array<keyof typeof supportedAreas>).reduce((closest, candidate) => {
+          const [closestLat, closestLng] = supportedAreas[closest];
+          const [candidateLat, candidateLng] = supportedAreas[candidate];
+          const closestDistance = (coords.latitude - closestLat) ** 2 + (coords.longitude - closestLng) ** 2;
+          const candidateDistance = (coords.latitude - candidateLat) ** 2 + (coords.longitude - candidateLng) ** 2;
+          return candidateDistance < closestDistance ? candidate : closest;
+        }, "Punggol" as keyof typeof supportedAreas);
+        setArea(nearest);
+        setLocationLabel(`Near ${nearest}`);
+        setLocationStatus(`Showing the closest suggestions around ${nearest}.`);
+      },
+      () => setLocationStatus("Allow location access in your browser, then try again."),
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+    );
+  };
   return <main>
     <header className="topbar"><a className="brand" href="#top" aria-label="Tiny Tummies Decide home"><span className="brand-mark">T</span><span>Tiny Tummies <i>Decide</i></span></a><button className="saved-action" aria-label="Saved places"><Icon name="heart" size={18}/><span>{saved.length || "Saved"}</span></button></header>
-    <section className="intro" id="top"><div className="location-line"><Icon name="pin" size={17}/><span>Singapore</span><span className="dot">·</span><button className="change">Change location</button></div><h1>Dinner, <em>sorted.</em></h1><p>Takeaway ideas your family will actually enjoy.</p></section>
+    <section className="intro" id="top"><div className="location-line"><Icon name="pin" size={17}/><span>{locationLabel}</span><span className="dot">·</span><button className="change" onClick={useCurrentLocation}>Use my location</button></div>{locationStatus && <p className="location-status" role="status">{locationStatus}</p>}<h1>Dinner, <em>sorted.</em></h1><p>Takeaway ideas your family will actually enjoy.</p></section>
     <section className="switcher" aria-label="Choose an area">{(["Punggol", "Bugis"] as const).map((x) => <button key={x} onClick={() => setArea(x)} className={area === x ? "active" : ""}>{x}</button>)}</section>
     <section className="family-card"><div className="family-icon"><Icon name="family" size={25}/></div><div><strong>Tonight&apos;s family</strong><span>2 adults + 1 toddler · age 2</span></div><button aria-label="Edit family details"><Icon name="chevron" size={19}/></button></section>
     <section className="decision-tools"><input aria-label="Search dishes" value={dishSearch} onChange={(e) => setDishSearch(e.target.value)} placeholder="Search dishes, e.g. plain noodles"/><div className="tool-row"><button className={noSpice ? "tool-active" : ""} onClick={() => setNoSpice(!noSpice)}>No spice: {noSpice ? "on" : "off"}</button><select aria-label="Food ready by" value={needBy} onChange={(e) => setNeedBy(e.target.value)}><option>Any time</option><option>Within 30 min</option><option>Within 45 min</option></select></div><div className="tool-row"><button className="decide" onClick={() => setDecision(shown[Math.floor(Math.random() * shown.length)] ?? null)}>Decide for us</button><button className="compare" onClick={() => setCompareOpen(!compareOpen)}>Compare shortlist</button></div>{decision && <div className="decision-result"><strong>Tonight&apos;s pick: {decision.name}</strong><span>{decision.budget} · {decision.total} · {crowdLabel[decision.crowd]}</span></div>}{compareOpen && <div className="compare-tray"><strong>Shortlist comparison</strong>{shown.slice(0, 3).map((p) => <div key={p.name}><b>{p.name}</b><span>{p.budget} · {p.total} · {details[p.name].distance}</span><span>★ {p.rating} · {noSpice ? "mild option available" : "family-friendly"}</span></div>)}</div>}</section>
