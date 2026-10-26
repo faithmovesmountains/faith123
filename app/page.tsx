@@ -1,0 +1,52 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Place = {
+  name: string; area: "Punggol" | "Bugis"; cuisine: string; venue: "Restaurant" | "Hawker / food court" | "Takeaway kiosk";
+  rating: string; reviews: string; budget: string; crowd: "Quiet" | "Moderate" | "Busy" | "Peak";
+  queue: string; prep: string; total: string; best: string; order: string; note: string; tags: string[]; tint: string;
+};
+
+const places: Place[] = [
+  { name: "Botak Cantonese Porridge", area: "Punggol", cuisine: "Chinese", venue: "Hawker / food court", rating: "4.7", reviews: "924 reviews", budget: "S$16–22", crowd: "Moderate", queue: "5–10 min", prep: "5–10 min", total: "10–20 min", best: "Before 6:30 pm", order: "2 mixed porridges + 1 minced pork porridge + youtiao", note: "Silky, comforting porridge with generous ingredients. The easiest toddler choice tonight.", tags: ["Mild-friendly", "Fast pickup", "Budget"], tint: "porridge" },
+  { name: "Sanook Kitchen", area: "Punggol", cuisine: "Thai", venue: "Restaurant", rating: "4.4", reviews: "128 reviews", budget: "S$32–42", crowd: "Busy", queue: "5–10 min", prep: "10–15 min", total: "15–25 min", best: "Before 6:30 pm", order: "Pineapple fried rice + pad thai + mild omelette", note: "Comforting Thai sharing dishes; ask for no chilli and set aside a plain toddler portion.", tags: ["Halal", "Sharing", "Mild on request"], tint: "thai" },
+  { name: "Mamma Mia Trattoria", area: "Punggol", cuisine: "Italian", venue: "Restaurant", rating: "4.7", reviews: "3,418 reviews", budget: "S$48–65", crowd: "Busy", queue: "10–15 min", prep: "15–20 min", total: "25–35 min", best: "Before 6:15 pm", order: "2 pastas + pizza or side to share", note: "A reliable family sharing order: flavourful pasta, plenty of cheesy toddler-safe choices.", tags: ["Halal", "Sharing", "Toddler favourite"], tint: "italian" },
+  { name: "Sukiya", area: "Punggol", cuisine: "Japanese", venue: "Restaurant", rating: "4.2", reviews: "Local favourite", budget: "S$25–35", crowd: "Moderate", queue: "3–8 min", prep: "5–7 min", total: "8–15 min", best: "After 8:15 pm", order: "2 gyudon or curry bowls + small plain rice", note: "The quick, dependable option when everyone needs their own simple bowl.", tags: ["Halal", "Fast pickup", "Individual bowls"], tint: "japanese" },
+  { name: "Tangled Fresh Pasta To Go", area: "Bugis", cuisine: "Italian", venue: "Takeaway kiosk", rating: "3.8", reviews: "107 reviews", budget: "S$30–45", crowd: "Moderate", queue: "5–10 min", prep: "8–12 min", total: "10–20 min", best: "Before 6:45 pm", order: "2 adult pastas + a simple pasta to share", note: "Fresh pasta at an accessible price. Ask for sauce separate for a less messy toddler meal.", tags: ["Fast pickup", "Takeaway-only", "Budget"], tint: "pasta" },
+  { name: "Daily Chicken", area: "Bugis", cuisine: "Korean", venue: "Restaurant", rating: "4.7", reviews: "1,844 reviews", budget: "S$38–55", crowd: "Peak", queue: "10–15 min", prep: "15–20 min", total: "25–35 min", best: "Before 6:20 pm", order: "Half chicken, soy garlic + kimbap + fries", note: "Crispy chicken and generous sharing portions. Stick to original or soy garlic for little ones.", tags: ["Sharing", "Crowd favourite", "Mild options"], tint: "chicken" },
+  { name: "Sushi Zushi", area: "Bugis", cuisine: "Japanese", venue: "Restaurant", rating: "4.7", reviews: "1,705 reviews", budget: "S$35–55", crowd: "Busy", queue: "5–12 min", prep: "10–15 min", total: "15–27 min", best: "After 8:15 pm", order: "Sushi set + simple handrolls + tamago", note: "Easy to customise: choose cooked rolls, tamago and cucumber for the toddler.", tags: ["Customisable", "Fast pickup", "Sharing"], tint: "sushi" },
+  { name: "Eighteen Chefs", area: "Bugis", cuisine: "Western", venue: "Restaurant", rating: "4.1", reviews: "1,323 reviews", budget: "S$35–50", crowd: "Busy", queue: "5–10 min", prep: "10–15 min", total: "15–25 min", best: "Before 6:30 pm", order: "2 baked rice or pasta mains + soup", note: "Generous, family-size comfort food at a fair price. Baked rice travels particularly well.", tags: ["Halal", "Sharing", "Comfort food"], tint: "baked" }
+];
+
+function Icon({ name, size = 20 }: { name: "pin" | "heart" | "clock" | "users" | "chevron" | "sliders" | "home" | "bookmark" | "family"; size?: number }) {
+  const paths: Record<string, React.ReactNode> = {
+    pin: <><path d="M12 21s7-5.1 7-12a7 7 0 1 0-14 0c0 6.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></>,
+    heart: <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z"/>,
+    clock: <><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.4 2"/></>,
+    users: <><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.5-3.2 2.4-5 5.5-5s5 1.8 5.5 5M16 5.5a3 3 0 0 1 0 5.8M17 14c2.2.2 3.7 1.8 4 5"/></>,
+    chevron: <path d="m9 18 6-6-6-6"/>, sliders: <><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="17" r="2"/></>,
+    home: <><path d="m4 10 8-6 8 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z"/><path d="M9 20v-6h6v6"/></>, bookmark: <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.5L6 21V4.5Z"/>, family: <><circle cx="8" cy="7" r="2.5"/><circle cx="16" cy="8" r="2"/><circle cx="12" cy="14" r="1.7"/><path d="M3.5 20c.3-3.6 2-5.5 4.5-5.5 1.3 0 2.2.4 3 1.3M15.7 14.8c2.9.2 4.5 2 4.8 5.2M8.5 20c.2-2.7 1.3-4.3 3.5-4.3s3.3 1.6 3.5 4.3"/></>
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+}
+
+export default function Home() {
+  const [area, setArea] = useState<"Punggol" | "Bugis">("Punggol");
+  const [filter, setFilter] = useState("All");
+  const [saved, setSaved] = useState<string[]>([]);
+  const filters = ["All", "Under 20 min", "Hawker / food court", "Restaurant", "Quiet / moderate", "Halal"];
+  const shown = useMemo(() => places.filter((p) => p.area === area && (filter === "All" || (filter === "Under 20 min" && p.total.startsWith("1")) || (filter === "Hawker / food court" && p.venue === filter) || (filter === "Restaurant" && p.venue === filter) || (filter === "Quiet / moderate" && ["Quiet", "Moderate"].includes(p.crowd)) || (filter === "Halal" && p.tags.includes("Halal")))), [area, filter]);
+  const best = shown[0] ?? places.find((p) => p.area === area)!;
+  return <main>
+    <header className="topbar"><a className="brand" href="#top" aria-label="Dinner Near Us home"><span className="brand-mark">D</span><span>Dinner <i>near us</i></span></a><button className="saved-action" aria-label="Saved places"><Icon name="heart" size={18}/><span>{saved.length || "Saved"}</span></button></header>
+    <section className="intro" id="top"><div className="location-line"><Icon name="pin" size={17}/><span>Singapore</span><span className="dot">·</span><button className="change">Change location</button></div><h1>Dinner, <em>sorted.</em></h1><p>Takeaway ideas your family will actually enjoy.</p></section>
+    <section className="switcher" aria-label="Choose an area">{(["Punggol", "Bugis"] as const).map((x) => <button key={x} onClick={() => setArea(x)} className={area === x ? "active" : ""}>{x}</button>)}</section>
+    <section className="family-card"><div className="family-icon"><Icon name="family" size={25}/></div><div><strong>Tonight&apos;s family</strong><span>2 adults + 1 toddler</span></div><button aria-label="Edit family details"><Icon name="chevron" size={19}/></button></section>
+    <section className="filter-row" aria-label="Filters"><button className="filter-control" aria-label="More filters"><Icon name="sliders" size={18}/></button>{filters.map((f) => <button key={f} onClick={() => setFilter(f)} className={filter === f ? "selected" : ""}>{f}</button>)}</section>
+    <section className="content"><div className="section-heading"><h2>Best tonight</h2><span>Typical dinner estimates</span></div><article className={`feature-card ${best.tint}`}><div className="feature-top"><div className="place-art"><span>{best.cuisine}</span></div><button onClick={() => setSaved((old) => old.includes(best.name) ? old.filter((x) => x !== best.name) : [...old, best.name])} className={saved.includes(best.name) ? "heart saved" : "heart"} aria-label={`Save ${best.name}`}><Icon name="heart" size={20}/></button></div><div className="feature-body"><div className="micro"><span>{best.cuisine}</span><b>·</b><span>{best.venue}</span></div><h3>{best.name}</h3><p>{best.note}</p><div className="quick-stats"><div><small>Family total</small><strong>{best.budget}</strong></div><div><small>Pickup time</small><strong>{best.total}</strong></div></div><div className="crowd-line"><span className={`crowd ${best.crowd.toLowerCase()}`}><i/><i/><i/><i/></span><strong>{best.crowd} crowd</strong><span>Queue {best.queue}</span></div><button className="view-button">View dinner details <Icon name="chevron" size={17}/></button></div></article>
+    <div className="section-heading list-head"><h2>More nearby</h2><span>{shown.length} options</span></div><div className="place-list">{shown.slice(1).map((p) => <article className="place-card" key={p.name}><div className={`mini-art ${p.tint}`}>{p.cuisine.slice(0, 1)}</div><div className="place-info"><div className="card-name"><h3>{p.name}</h3><button onClick={() => setSaved((old) => old.includes(p.name) ? old.filter((x) => x !== p.name) : [...old, p.name])} className={saved.includes(p.name) ? "tiny-heart saved" : "tiny-heart"} aria-label={`Save ${p.name}`}><Icon name="heart" size={17}/></button></div><div className="micro"><span>{p.cuisine}</span><b>·</b><span>{p.venue}</span></div><div className="rating"><span>★ {p.rating}</span><span>{p.reviews}</span><span className="divider">|</span><span>{p.budget}</span></div><div className="card-footer"><span className={`crowd-text ${p.crowd.toLowerCase()}`}>{p.crowd}</span><span>Queue {p.queue}</span><span>·</span><strong>Ready {p.total}</strong></div></div></article>)}</div>
+    <aside className="estimate-note"><Icon name="clock" size={18}/><p><strong>Planning note:</strong> crowd and wait times are curated estimates for a typical weekday dinner, not live footfall.</p></aside></section>
+    <nav className="bottom-nav" aria-label="Primary"><a className="current" href="#top"><Icon name="home" size={21}/><span>Explore</span></a><button><Icon name="bookmark" size={21}/><span>Saved</span></button><button><Icon name="users" size={21}/><span>Family</span></button></nav>
+  </main>;
+}
