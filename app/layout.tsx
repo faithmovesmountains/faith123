@@ -5,8 +5,8 @@ import "./decision-tools.css";
 import "./family-theme.css";
 
 export const metadata: Metadata = {
-  title: "Dinner Near Us",
-  description: "Takeaway ideas for a family dinner in Singapore."
+  title: "Tiny Tummies Decide",
+  description: "Family-friendly takeaway ideas for dinner in Singapore."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
